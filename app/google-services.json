@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "225712686256",
+    "firebase_url": "https://chat-lokao.firebaseio.com",
+    "project_id": "chat-lokao",
+    "storage_bucket": "chat-lokao.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:225712686256:android:628af91768f1f28d5b6775",
+        "android_client_info": {
+          "package_name": "dev.mathitos.chatlokao"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "225712686256-ccp5enso9ckmdl5qa9dtu0jhm8tec1s3.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBGVNtFj0xnLhsynTJhwDKSERgyHcHRb-Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "225712686256-ccp5enso9ckmdl5qa9dtu0jhm8tec1s3.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
