@@ -6,4 +6,6 @@
     <string name="send">Send</string>
     <string name="name">Name</string>
     <string name="content">Content</string>
+    <string name="facebook_application_id" translatable="false">2794896293909019</string>
+    <string name="facebook_login_protocol_scheme" translatable="false">fb2794896293909019</string>
 </resources>
