@@ -3,6 +3,8 @@ package dev.mathitos.chatlokao
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.database.*
@@ -17,12 +19,13 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var firebaseDatabase: FirebaseDatabase
     private lateinit var messagesDatabaseReference: DatabaseReference
+    private var databaseEventListener: ChildEventListener? = null
     private lateinit var firebaseAuth: FirebaseAuth
-    private lateinit var authStateListener: FirebaseAuth.AuthStateListener
+    private var authStateListener: FirebaseAuth.AuthStateListener? = null
 
     lateinit var messageListAdapter: MessageAdapter
 
-    var username: String = "Anonymous"
+    private var username: String = "Anonymous"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,26 +33,25 @@ class MainActivity : AppCompatActivity() {
 
         firebaseDatabase = FirebaseDatabase.getInstance()
         firebaseAuth = FirebaseAuth.getInstance()
-
         messagesDatabaseReference = firebaseDatabase.reference.child("messages")
-
-        initMessageAdapter()
 
         sendButton.setOnClickListener {
             sendMessage()
         }
-        addDatabaseEventListener()
+
         addAuthStateListener()
+
+        initMessageAdapter()
     }
 
     override fun onResume() {
         super.onResume()
-        firebaseAuth.addAuthStateListener(authStateListener)
+        authStateListener?.let { firebaseAuth.addAuthStateListener(it) }
     }
 
     override fun onPause() {
         super.onPause()
-        firebaseAuth.removeAuthStateListener(authStateListener)
+        authStateListener?.let { firebaseAuth.removeAuthStateListener(it) }
     }
 
     private fun initMessageAdapter() {
@@ -57,28 +59,39 @@ class MainActivity : AppCompatActivity() {
         messageList.adapter = messageListAdapter
     }
 
-    private fun addDatabaseEventListener(){
-        messagesDatabaseReference.addChildEventListener( object: ChildEventListener {
-            override fun onCancelled(p0: DatabaseError) {
-            }
+    private fun buildDatabaseEventListener(){
+       databaseEventListener =  object: ChildEventListener {
+           override fun onCancelled(p0: DatabaseError) {
+           }
 
-            override fun onChildMoved(p0: DataSnapshot, p1: String?) {
-            }
+           override fun onChildMoved(p0: DataSnapshot, p1: String?) {
+           }
 
-            override fun onChildChanged(p0: DataSnapshot, p1: String?) {
-            }
+           override fun onChildChanged(p0: DataSnapshot, p1: String?) {
+           }
 
-            override fun onChildAdded(dataSnapshot: DataSnapshot, p1: String?) {
+           override fun onChildAdded(dataSnapshot: DataSnapshot, p1: String?) {
                 val message: MessageEntity? = dataSnapshot.getValue(MessageEntity::class.java)
                 if(message != null) {
-                    messageListAdapter.messages.add(message)
+                    messageListAdapter.add(message)
                     messageListAdapter.notifyDataSetChanged()
                 }
             }
 
-            override fun onChildRemoved(p0: DataSnapshot) {
-            }
-        })
+           override fun onChildRemoved(p0: DataSnapshot) {
+           }
+       }
+    }
+
+    private fun addDatabaseEventListener(){
+        if(databaseEventListener == null ){
+            buildDatabaseEventListener()
+            messagesDatabaseReference.addChildEventListener(databaseEventListener!!)
+        }
+    }
+
+    private fun removeDatabaseEventListener(){
+        databaseEventListener?.let { messagesDatabaseReference.removeEventListener(it) }
     }
 
     private fun addAuthStateListener(){
@@ -86,14 +99,19 @@ class MainActivity : AppCompatActivity() {
             firebaseAuth ->
                 if(firebaseAuth.currentUser != null) {
                     username = firebaseAuth.currentUser!!.displayName!!
+                    addDatabaseEventListener()
                 } else {
+                    messageListAdapter.clear()
+                    removeDatabaseEventListener()
                     createSignInIntent()
                 }
         }
     }
 
     private fun sendMessage() {
-        val text = messageEditText.text.toString()
+        val text = messageEditText.text.trim().toString()
+        if(text.isEmpty()) return
+
         val message = MessageEntity(username, text, null)
 
         messagesDatabaseReference.push().setValue(message)
@@ -136,7 +154,7 @@ class MainActivity : AppCompatActivity() {
                 // sign-in flow using the back button. Otherwise check
                 // response.getError().getErrorCode() and handle the error.
                 // ...
-                showToaster("deu ruim no login")
+                showToaster("deu ruim no login ${response.toString()}")
             }
         }
     }
@@ -144,14 +162,6 @@ class MainActivity : AppCompatActivity() {
     private fun signOut() {
         AuthUI.getInstance()
             .signOut(this)
-            .addOnCompleteListener {
-                // ...
-            }
-    }
-
-    private fun delete() {
-        AuthUI.getInstance()
-            .delete(this)
             .addOnCompleteListener {
                 // ...
             }
